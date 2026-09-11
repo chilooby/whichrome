@@ -68,7 +68,13 @@ info "registered this computer and scanned its Chrome profiles"
 # 7. Make the registry findable from anywhere. It is per-user data, kept out of the repo.
 registry="${WHICHROME_REGISTRY:-$HOME/.whichrome-registry.json}"
 line="export WHICHROME_REGISTRY=\"$registry\""
-for rc in "$HOME/.zshrc" "$HOME/.bashrc"; do
+if [ -n "${WHICHROME_NO_ENV:-}" ]; then
+  info "WHICHROME_NO_ENV set: not editing your shell rc files; default registry is $registry"
+  rcfiles=""
+else
+  rcfiles="$HOME/.zshrc $HOME/.bashrc"
+fi
+for rc in $rcfiles; do
   [ -f "$rc" ] || continue
   grep -q "WHICHROME_REGISTRY" "$rc" || { printf '\n# whichrome\n%s\n' "$line" >> "$rc"; info "added WHICHROME_REGISTRY to $(basename "$rc")"; }
 done

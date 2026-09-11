@@ -7,7 +7,8 @@ param(
   [string]$Repo = "https://github.com/chilooby/whichrome.git",
   [string]$InstallDir = "$HOME\.whichrome",
   [string]$SkillsDir = "$HOME\.claude\skills\whichrome",
-  [switch]$NoClone
+  [switch]$NoClone,
+  [switch]$NoEnv   # skip every persistent HKCU\Environment write (PATH, WHICHROME_REGISTRY)
 )
 
 $ErrorActionPreference = "Stop"
@@ -65,17 +66,32 @@ $entry = Join-Path $src "bin/whichrome.py"
 $launcher = "@echo off`r`n`"$($py.Source)`" `"$entry`" %*`r`n"
 [System.IO.File]::WriteAllText((Join-Path $binDir "whichrome.cmd"), $launcher)
 Info "launcher installed -> $binDir\whichrome.cmd"
-$userPath = [Environment]::GetEnvironmentVariable("Path", "User")
-if ($userPath -notlike "*$binDir*") {
-  [Environment]::SetEnvironmentVariable("Path", "$userPath;$binDir", "User")
-  Info "added $binDir to your PATH (restart your shell to pick it up)"
+if ($NoEnv) {
+  Info "-NoEnv: not touching your PATH; call $binDir/whichrome.cmd directly"
+} else {
+  $userPath = [Environment]::GetEnvironmentVariable("Path", "User")
+  if ($userPath -notlike "*$binDir*") {
+    [Environment]::SetEnvironmentVariable("Path", "$userPath;$binDir", "User")
+    Info "added $binDir to your PATH (restart your shell to pick it up)"
+  }
 }
 
 # 6. Point the CLI at the registry. It is per-user data and deliberately not in the repo.
 $registry = $env:WHICHROME_REGISTRY
 if (-not $registry) { $registry = Join-Path $HOME ".whichrome-registry.json" }
-[Environment]::SetEnvironmentVariable("WHICHROME_REGISTRY", $registry, "User")
-Info "WHICHROME_REGISTRY -> $registry"
+if ($NoEnv) {
+  Info "-NoEnv: leaving WHICHROME_REGISTRY alone; the default is $registry"
+} else {
+  # Only persist a machine-wide default when there is not already a real one set,
+  # so re-running the installer never silently repoints an existing registry.
+  $current = [Environment]::GetEnvironmentVariable("WHICHROME_REGISTRY", "User")
+  if (-not $current) {
+    [Environment]::SetEnvironmentVariable("WHICHROME_REGISTRY", $registry, "User")
+    Info "WHICHROME_REGISTRY -> $registry"
+  } else {
+    Info "WHICHROME_REGISTRY already set to $current (left as is)"
+  }
+}
 
 Write-Host ""
 Info "done. In Claude Code, run:  /whichrome   (or just ask it to use a browser)"

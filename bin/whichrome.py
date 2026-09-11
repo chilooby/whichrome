@@ -59,9 +59,14 @@ def load() -> dict:
     if not p.exists():
         return {"version": SCHEMA_VERSION, "devices": {}, "browsers": {}}
     try:
-        data = json.loads(p.read_text(encoding="utf-8"))
+        data = json.loads(p.read_text(encoding="utf-8-sig"))
     except json.JSONDecodeError as exc:
         raise SystemExit(f"whichrome: registry at {p} is not valid JSON ({exc}). Fix or delete it.")
+    except OSError as exc:
+        # A directory, a locked file, a bad permission: all of these are "fix the path",
+        # not a stack trace. IsADirectoryError and PermissionError are both OSError.
+        raise SystemExit(f"whichrome: could not read the registry at {p} ({exc}). "
+                         f"Check WHICHROME_REGISTRY points at a writable file.")
     if not isinstance(data, dict):
         raise SystemExit(f"whichrome: registry at {p} must be a JSON object, found {type(data).__name__}.")
     for field in ("devices", "browsers"):
@@ -82,8 +87,25 @@ def save(data: dict) -> None:
     data["version"] = SCHEMA_VERSION
     # Write atomically: two whichrome processes must not leave a half-written registry.
     tmp = p.with_suffix(p.suffix + ".tmp%d" % os.getpid())
-    tmp.write_text(json.dumps(data, indent=2, sort_keys=False) + "\n", encoding="utf-8")
-    os.replace(tmp, p)
+    try:
+        tmp.write_text(json.dumps(data, indent=2, sort_keys=False) + "\n", encoding="utf-8")
+        last = None
+        for attempt in range(5):
+            try:
+                os.replace(tmp, p)
+                return
+            except PermissionError as exc:  # Windows sharing violation: another reader has it open
+                last = exc
+                time.sleep(0.15 * (attempt + 1))
+        raise last
+    except OSError as exc:
+        try:
+            if tmp.exists():
+                tmp.unlink()  # never leave an orphan .tmp behind
+        except OSError:
+            pass
+        raise SystemExit(f"whichrome: could not write the registry at {p} ({exc}). "
+                         f"Close anything holding it open and try again.")
 
 
 def today() -> str:
@@ -487,9 +509,10 @@ def cmd_resolve(args) -> None:
         raise SystemExit(f"whichrome: no browser nicknamed {args.name!r}. Try: whichrome nicknames")
     if len(matches) > 1:
         # Never silently pick one of several: an ambiguous name is a question, not a default.
-        exact = [m for m in matches if (m[1].get("nickname") or "").strip().lower() == want]
-        local = [m for m in (exact or matches) if m[1].get("device") == key]
-        pool = local or exact or matches
+        # Only locality narrows the field. Preferring an exact nickname over an alias would
+        # hide a genuine collision between two different browsers.
+        local = [m for m in matches if m[1].get("device") == key]
+        pool = local or matches
         if len(pool) > 1:
             lines = [f"  {d}  {describe(r, None, locality_label(r, key))}" for d, r in pool]
             raise SystemExit(f"whichrome: {args.name!r} is ambiguous across {len(pool)} browsers:\n"
