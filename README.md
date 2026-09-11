@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/logo-mark.png" alt="Whichrome" width="150">
+  <img src="assets/logo-wide.png" alt="Whichrome: three identical engraved Chrome specimens, the correct one ringed in red" width="560">
 </p>
 
 <h1 align="center">Whichrome</h1>
@@ -54,6 +54,22 @@ And when the agent has to ask, the question is actually answerable:
 <p align="center"><sub><i>A field guide exists to tell near-identical specimens apart. So does this.</i></sub></p>
 
 ## Install
+
+**As a Claude Code plugin** (recommended, works on every machine you run it on)
+
+```
+/plugin marketplace add chilooby/whichrome
+/plugin install whichrome@whichrome-marketplace
+```
+
+The skill and the `whichrome` command arrive together, and updates come through the
+marketplace. Then register the computer you are on once:
+
+```bash
+whichrome device --label "Desk PC" --scan
+```
+
+### Or install the standalone script
 
 **macOS · Linux · Git Bash**
 

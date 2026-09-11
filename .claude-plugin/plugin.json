@@ -1,0 +1,11 @@
+{
+  "name": "whichrome",
+  "displayName": "Whichrome",
+  "description": "Know which Chrome you're driving. Remembers which connected Chrome profile is which, and which physical computer each one runs on, so Claude never drives a browser on a machine you are not sitting at.",
+  "version": "1.0.0",
+  "author": { "name": "chilooby", "url": "https://github.com/chilooby" },
+  "homepage": "https://github.com/chilooby/whichrome",
+  "repository": "https://github.com/chilooby/whichrome",
+  "license": "MIT",
+  "keywords": ["chrome", "browser", "profiles", "claude-in-chrome", "devices", "locality"]
+}

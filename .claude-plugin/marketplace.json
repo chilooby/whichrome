@@ -1,0 +1,16 @@
+{
+  "name": "whichrome-marketplace",
+  "description": "Whichrome: a registry and locality proof for Claude's Chrome extension",
+  "owner": { "name": "chilooby", "url": "https://github.com/chilooby" },
+  "plugins": [
+    {
+      "name": "whichrome",
+      "description": "Know which Chrome you're driving: nicknames, per-computer identity, and a loopback beacon that proves a browser is really on this machine.",
+      "version": "1.0.0",
+      "source": "./",
+      "author": { "name": "chilooby", "url": "https://github.com/chilooby" },
+      "license": "MIT",
+      "keywords": ["chrome", "browser", "profiles", "claude-in-chrome"]
+    }
+  ]
+}
