@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/logo.svg" alt="Whichrome" width="128" height="128">
+  <img src="assets/logo-mark.png" alt="Whichrome" width="150">
 </p>
 
 <h1 align="center">Whichrome</h1>
@@ -10,10 +10,10 @@
 </p>
 
 <p align="center">
-  <img alt="License MIT" src="https://img.shields.io/badge/license-MIT-20D9BB?style=flat-square">
-  <img alt="Python 3.9+" src="https://img.shields.io/badge/python-3.9%2B-20D9BB?style=flat-square">
-  <img alt="Zero dependencies" src="https://img.shields.io/badge/dependencies-none-20D9BB?style=flat-square">
-  <img alt="Windows macOS Linux" src="https://img.shields.io/badge/win%20%C2%B7%20mac%20%C2%B7%20linux-supported-20D9BB?style=flat-square">
+  <img alt="License MIT" src="https://img.shields.io/badge/license-MIT-C0392B?style=flat-square&labelColor=1F1A14">
+  <img alt="Python 3.9+" src="https://img.shields.io/badge/python-3.9%2B-C0392B?style=flat-square&labelColor=1F1A14">
+  <img alt="Zero dependencies" src="https://img.shields.io/badge/dependencies-none-C0392B?style=flat-square&labelColor=1F1A14">
+  <img alt="Claude Code skill" src="https://img.shields.io/badge/claude%20code-skill-C0392B?style=flat-square&labelColor=1F1A14">
 </p>
 
 ---
@@ -48,8 +48,10 @@ $ whichrome resolve cyborg
 And when the agent has to ask, the question is actually answerable:
 
 <p align="center">
-  <img src="assets/picker.svg" alt="The Whichrome picker: each browser labelled with its nickname, account and computer, the best match recommended, one marked as running on another computer, one marked unavailable" width="820">
+  <img src="assets/picker.svg" alt="A field-guide identification plate listing four connected browsers: the one to take is ringed in red, its lookalike is cross-referenced, one runs on another computer, one is not connected" width="880">
 </p>
+
+<p align="center"><sub><i>A field guide exists to tell near-identical specimens apart. So does this.</i></sub></p>
 
 ## Install
 
@@ -70,6 +72,18 @@ Run it once per computer. It installs the skill into `~/.claude/skills/whichrome
 `Local State` so every local profile is already mapped to its signed-in account.
 
 Then just use Claude normally. The skill fires before any browser action.
+
+### Where it works
+
+| Surface | Works? | Why |
+| --- | --- | --- |
+| **Claude Code (CLI)** | Yes | Reads `~/.claude/skills/`, runs the CLI over Bash, drives the Chrome extension |
+| **Claude Code (desktop / IDE)** | Yes | Same machine, same skills folder, same registry |
+| **Claude Code on the web** | No | Runs in a cloud sandbox with no access to your local Chrome or registry |
+| **claude.ai chat** | No | No local shell and no `~/.claude/skills`, so neither the skill nor the CLI can load |
+
+Install it on each computer you actually sit at. The registry is per-user and syncs
+by pointing `WHICHROME_REGISTRY` at a shared location.
 
 <sub>Prefer not to touch your environment? Pass <code>-NoEnv</code> (PowerShell) or set <code>WHICHROME_NO_ENV=1</code> (bash).
 No <code>whichrome</code> on PATH? Every command below works as <code>python &lt;repo&gt;/bin/whichrome.py …</code> too.</sub>
