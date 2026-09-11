@@ -1,98 +1,133 @@
-# Whichrome
+<p align="center">
+  <img src="assets/logo.svg" alt="Whichrome" width="128" height="128">
+</p>
 
-**Know which Chrome you're driving.**
+<h1 align="center">Whichrome</h1>
 
-Claude's Chrome extension lists your connected browsers as `Browser 1`, `Browser 2`,
-`Browser 3`. The names are positional, they shuffle between sessions, and renaming them in
-Chrome does not stick. Nothing tells you which *computer* each one is on.
+<p align="center">
+  <b>Know which Chrome you're driving.</b><br>
+  <sub>A registry and a Claude skill that stop your AI agent opening pages in the wrong browser, on the wrong computer.</sub>
+</p>
 
-So Claude guesses. It opens a page on your work laptop while you're sitting at your desktop,
-and you spend the next five minutes hunting for a window that isn't on your screen.
+<p align="center">
+  <img alt="License MIT" src="https://img.shields.io/badge/license-MIT-20D9BB?style=flat-square">
+  <img alt="Python 3.9+" src="https://img.shields.io/badge/python-3.9%2B-20D9BB?style=flat-square">
+  <img alt="Zero dependencies" src="https://img.shields.io/badge/dependencies-none-20D9BB?style=flat-square">
+  <img alt="Windows macOS Linux" src="https://img.shields.io/badge/win%20%C2%B7%20mac%20%C2%B7%20linux-supported-20D9BB?style=flat-square">
+</p>
 
-Whichrome fixes that with a registry Claude reads before it touches a browser.
+---
+
+## The problem
+
+Claude's Chrome extension lists your connected browsers like this:
 
 ```
-This computer: Desk PC (DESKPC)
-* 1ec7d06e-…  cyborg - you@example.com - on Desk PC - THIS computer
-  ba237d7c-…  cyborg-2 - you@example.com - on Desk PC - recorded here, not beacon-proved
-  9653c8f9-…  work - work@example.com - on Work laptop - REMOTE - not this computer
-  09b0a7ec-…  unidentified
+Browser 1    Browser 2    Browser 3    Browser 4
 ```
 
-Now "use the cyborg" resolves to a deviceId instead of a scavenger hunt.
+That's it. The names are positional, they shuffle between sessions, renaming them in Chrome
+doesn't stick, and **nothing tells you which computer each one is on**.
+
+So your agent guesses. It opens a page on your work laptop while you're sitting at your
+desktop, and you spend five minutes hunting for a window that isn't on your screen.
+
+It gets worse: one Chrome profile can connect **twice**, showing up as two entries with the
+same account, where only one holds the window with your live session. They are
+indistinguishable. Picking the wrong one looks exactly like success.
+
+## The fix
+
+Whichrome remembers. Ask for a browser by name and it resolves to the right one:
+
+```console
+$ whichrome resolve cyborg
+1ec7d06e-6042-43e8-b2c4-611bd9ec5afe  cyborg - you@example.com - THIS computer
+```
+
+And when the agent has to ask, the question is actually answerable:
+
+<p align="center">
+  <img src="assets/picker.svg" alt="The Whichrome picker: each browser labelled with its nickname, account and computer, the best match recommended, one marked as running on another computer, one marked unavailable" width="820">
+</p>
 
 ## Install
 
-macOS / Linux / Git Bash:
+**macOS · Linux · Git Bash**
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/chilooby/whichrome/main/install.sh | bash
 ```
 
-Windows PowerShell:
+**Windows PowerShell**
 
 ```powershell
 irm https://raw.githubusercontent.com/chilooby/whichrome/main/install.ps1 | iex
 ```
 
-That clones the repo, installs the skill into `~/.claude/skills/whichrome/`, puts a
-`whichrome` launcher in `~/.local/bin`, registers the computer you're on, and scans Chrome's
-own `Local State` so every local profile directory is already mapped to its signed-in account.
-Run it once per computer. No `whichrome` on PATH? Call
-`python <repo>/bin/whichrome.py` instead; every example below works either way.
+Run it once per computer. It installs the skill into `~/.claude/skills/whichrome/`, drops a
+`whichrome` launcher in `~/.local/bin`, registers the machine you're on, and reads Chrome's own
+`Local State` so every local profile is already mapped to its signed-in account.
 
 Then just use Claude normally. The skill fires before any browser action.
 
-## What it actually does
+<sub>Prefer not to touch your environment? Pass <code>-NoEnv</code> (PowerShell) or set <code>WHICHROME_NO_ENV=1</code> (bash).
+No <code>whichrome</code> on PATH? Every command below works as <code>python &lt;repo&gt;/bin/whichrome.py …</code> too.</sub>
 
-**Remembers profiles by deviceId.** The only stable handle the extension exposes. Nicknames,
-accounts, aliases and Chrome profile directories hang off it.
+## What it does
 
-**Knows which computer each browser is on.** Every record is keyed to a device fingerprint
-(hostname + machine UUID), so a browser registered on your desktop is flagged
-`REMOTE - not this computer` when you're on your laptop.
+### Remembers profiles by deviceId
 
-**Proves locality instead of trusting a flag.** The extension's `isLocal` has reported `true`
-for browsers on other machines. Whichrome serves a nonce on `127.0.0.1` and navigates the
-candidate browser to it. Only a Chrome running on this machine can reach it:
+The only stable handle the extension exposes. Nicknames, accounts, aliases and Chrome profile
+directories hang off it. The same browser was `Browser 3` one day and `Browser 2` the next; the
+deviceId never moved.
+
+### Knows which computer each browser is on
+
+Every record is keyed to a device fingerprint (hostname + machine UUID). A browser registered
+on your desktop reads `REMOTE - not this computer` when you're on your laptop.
+
+### Proves locality instead of trusting a flag
+
+The extension's `isLocal` has reported `true` for browsers on other machines. Whichrome serves a
+nonce on loopback and points the browser at it. Only a Chrome on this machine can reach it:
 
 ```bash
 whichrome beacon start --port 8799 --nonce probe-1 &
 # ...navigate the browser to http://127.0.0.1:8799/probe-1...
-whichrome beacon check --nonce probe-1 --port 8799   # exit 0 local, 3 not local, 4 port busy
+whichrome beacon check --nonce probe-1 --port 8799   # exit 0 local · 3 not local · 4 port busy
 ```
 
-Only a request carrying the nonce counts, each probe gets its own state file, and the port is
-not shared, so a stray page or a second probe cannot forge a local verdict.
+Only a request carrying the nonce counts, each probe gets its own state file, and the port
+isn't shareable, so a stray page can't forge a local verdict.
 
-**Turns the required prompt into a useful one.** The extension makes Claude ask which browser
-to use whenever several are connected. Whichrome supplies the labels, so instead of
-"Browser 1 / Browser 2 / Browser 3" you get names, accounts, and which machine each is on,
-with the likely one first.
+### Never claims proof it doesn't have
 
-**Syncs across devices and Claude surfaces.** The registry is one plain JSON file. It lives at
-`~/.whichrome-registry.json` by default, deliberately outside the repo. Point
-`WHICHROME_REGISTRY` at a synced folder or a private repo on each machine and every Claude
-session on any of them knows your browsers.
+Locality is a tri-state, not a boolean. `THIS computer` means beacon-proved. Anything softer
+says so out loud: `recorded here, not beacon-proved`.
+
+### Syncs across devices
+
+The registry is one plain JSON file at `~/.whichrome-registry.json`. Point
+`WHICHROME_REGISTRY` at a synced folder or a private repo and every Claude session on every
+machine sees the same browsers.
 
 ## CLI
 
-```bash
-whichrome device --label "MacBook" --scan     # register this computer + scan Chrome profiles
-whichrome roster --connected connected.json   # merge the extension's list with the registry
-whichrome resolve cyborg --quiet              # nickname -> deviceId
-whichrome record --id <deviceId> --nickname cyborg --account you@example.com --default --local
-whichrome picker --connected connected.json --want cyborg   # ready-made AskUserQuestion options
-whichrome nicknames                           # everything known
-whichrome beacon start|check                  # locality proof
-whichrome forget <deviceId>
-```
+| Command | What it does |
+| --- | --- |
+| `whichrome device --label "Desk PC" --scan` | Register this computer, map its Chrome profiles |
+| `whichrome picker --connected c.json --want cyborg` | Ready-made picker options, unavailable ones marked |
+| `whichrome roster --connected c.json --json` | Merge the extension's list with the registry |
+| `whichrome resolve cyborg --quiet` | Nickname → deviceId |
+| `whichrome record --id <id> --nickname cyborg --account you@example.com --default --local` | Save what you learned |
+| `whichrome nicknames` | Everything known |
+| `whichrome beacon start` / `check` | Locality proof |
+| `whichrome forget <id>` | Drop a record |
 
-`roster` accepts the `list_connected_browsers` JSON array from a file or stdin, and tolerates
-prose pasted around it. `--json` emits machine-readable rows including `knownLocalHere`
-(`true` proved local, `"probably-here"` recorded here but unproved, `"probably-remote"`
-recorded elsewhere, `false` proved remote, `null` unknown). `picker` emits the
-`AskUserQuestion` options directly, marking `[ON ANOTHER COMPUTER]` and `[UNAVAILABLE]`.
+`roster` and `picker` take the `list_connected_browsers` JSON array from a file or stdin, and
+tolerate prose pasted around it. `roster --json` reports `knownLocalHere` as `true`
+(proved here), `"probably-here"`, `"probably-remote"`, `false` (proved elsewhere) or `null`.
 
 ## Registry format
 
@@ -109,7 +144,7 @@ recorded elsewhere, `false` proved remote, `null` unknown). `picker` emits the
     }
   },
   "browsers": {
-    "ba237d7c-…": {
+    "1ec7d06e-…": {
       "nickname": "cyborg",
       "account": "you@example.com",
       "chromeProfileDir": "Profile 1",
@@ -124,27 +159,26 @@ recorded elsewhere, `false` proved remote, `null` unknown). `picker` emits the
 }
 ```
 
-It holds account addresses, machine labels and a machine id, never tokens or cookies. That is
-still personal data, which is why the registry is not part of the repo and is gitignored: a
-clone you publish contains `registry.example.json` and nothing about you. `--scan` reads only
-the profile directory name and signed-in address from Chrome's `Local State`; it ignores
-everything else in that file.
+It holds account addresses, machine labels and a machine id — never tokens or cookies. That's
+still personal data, which is why it lives in your home directory and is gitignored. A clone you
+publish contains `registry.example.json` and nothing about you. `--scan` reads only the profile
+directory name and signed-in address from Chrome's `Local State`, and ignores the rest.
+
+## Gotchas worth knowing
+
+- **`accounts.google.com` is blocked for the extension.** Google sign-in and OAuth consent
+  screens must be clicked by a human. Whichrome's job is making sure that human is told *which
+  window, on which computer*.
+- **The extension often opens its tab group in a separate Chrome window** sitting behind the
+  others.
+- **One profile can connect twice** with the same account, and only one holds your live session.
+  Nickname them apart and mark the live one `--default`; the account fingerprint can't tell them
+  apart.
+- **Tab ids belong to one browser.** After switching, re-read the tab context.
 
 ## Requirements
 
 Python 3.9+, git, and Claude with the Chrome extension. No third-party packages.
-
-## Gotchas worth knowing
-
-- `accounts.google.com` is blocked for the extension, so Google sign-in and OAuth consent
-  screens have to be clicked by a human. Whichrome's job is making sure that human is told
-  *which window on which computer*.
-- The extension often opens its tab group in a separate Chrome window that sits behind the
-  others.
-- One Chrome profile can connect twice and show up as two deviceIds with the same account, and
-  only one of them holds the window with your live session. Nickname them apart and mark the
-  live one `--default`; the fingerprint alone cannot tell them apart.
-- Tab ids belong to a single browser; after switching, re-read the tab context.
 
 ## License
 
