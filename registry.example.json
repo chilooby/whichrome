@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "devices": {
+    "LAPTOP|00000000-0000-0000-0000-000000000000": {
+      "label": "Work laptop",
+      "hostname": "LAPTOP",
+      "os": "Windows",
+      "chromeProfiles": {
+        "Default": "you@example.com",
+        "Profile 1": "work@example.com"
+      },
+      "lastSeen": "2026-01-01"
+    }
+  },
+  "browsers": {
+    "11111111-2222-3333-4444-555555555555": {
+      "nickname": "work",
+      "account": "work@example.com",
+      "chromeProfileDir": "Profile 1",
+      "device": "LAPTOP|00000000-0000-0000-0000-000000000000",
+      "localityProof": "beacon",
+      "aliases": [
+        "office"
+      ],
+      "default": true,
+      "lastVerified": "2026-01-01",
+      "notes": "The window with the signed-in session."
+    }
+  }
+}

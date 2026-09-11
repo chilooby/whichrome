@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+.DS_Store
+connected.json
+whichrome-beacon*.json
+.beacon.log
+.gh-login.log
+.redteam/
+.redteam2/
+.omc/
+
+# Your registry holds account addresses and machine ids. Keep it out of the repo.
+registry.json
