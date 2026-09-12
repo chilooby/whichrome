@@ -166,12 +166,13 @@ synced folder or a private repo on each machine.
 - When `browser_batch` times out, fall back to single calls. A stalled batch can still have
   completed its earlier steps, so re-check state (for example `whichrome beacon check`) before
   assuming nothing happened.
-- **The beacon needs localhost permission in that specific browser.** The extension grants site
-  permissions per browser, so `http://127.0.0.1:...` may be blocked in one Chrome and allowed in
-  another. Observed directly: the same beacon that one browser fetched successfully was
-  unreachable from a second browser on the same machine, which reported a navigation error and
-  left the beacon with zero hits. If `beacon check` returns 0 hits but `curl` to the same URL
-  works, it is a permission problem in that browser, not a locality verdict. Ask the user to
-  allow the site, or fall back to asking them which computer the window is on.
+- **Zero beacon hits usually means exactly what it says: that browser is not on this machine.**
+  When one browser failed the check I first assumed the extension had blocked `127.0.0.1` for
+  that browser specifically. Two further checks said otherwise: no window carrying that
+  browser's tab titles existed anywhere in this machine's window list, and its public IP matched
+  this machine's, so it was a different computer on the same network. The beacon was right.
+  Before you override a not-local verdict, prove the beacon itself is alive by fetching the same
+  URL with `curl`. If curl gets 200 and the browser gets nothing, believe the beacon and tell
+  the user that window is on another computer.
 - Tab ids belong to one browser. After `select_browser`, old tab ids are invalid: call
   `tabs_context_mcp {createIfEmpty: true}` again.

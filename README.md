@@ -212,9 +212,10 @@ directory name and signed-in address from Chrome's `Local State`, and ignores th
 - **One profile can connect twice** with the same account, and only one holds your live session.
   Nickname them apart and mark the live one `--default`; the account fingerprint can't tell them
   apart.
-- **The beacon needs localhost permission in that browser.** Site permissions are per browser, so
-  `127.0.0.1` can be allowed in one Chrome and blocked in another. If `beacon check` reports zero
-  hits while `curl` to the same URL succeeds, that is a permission problem, not a remote browser.
+- **Zero beacon hits usually means the browser really is elsewhere.** Prove the beacon is alive
+  with `curl` to the same URL first. When one of my browsers failed the check, the window list on
+  the machine and a public-IP comparison both confirmed it was a different computer on the same
+  network, not a permissions quirk.
 - **Tab ids belong to one browser.** After switching, re-read the tab context.
 
 ## Relationship to Claude Code itself
