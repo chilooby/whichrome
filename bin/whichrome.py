@@ -20,7 +20,11 @@ Commands
   nicknames                   List every known nickname.
 
 Registry location (first hit wins):
-  $WHICHROME_REGISTRY  ->  <repo>/registry.json
+  $WHICHROME_REGISTRY  ->  ~/.whichrome-registry.json
+
+Test / demo overrides (so recorded output need not leak a real machine):
+  $WHICHROME_HOSTNAME    reported hostname
+  $WHICHROME_DEVICE_KEY  the whole device key
 """
 from __future__ import annotations
 
@@ -143,8 +147,17 @@ def machine_uuid() -> str:
     return ""
 
 
+def hostname() -> str:
+    # WHICHROME_HOSTNAME exists for deterministic tests, demos and CI, where the real
+    # machine name must not leak into recorded output.
+    return os.environ.get("WHICHROME_HOSTNAME") or socket.gethostname()
+
+
 def device_key() -> str:
-    host = socket.gethostname()
+    override = os.environ.get("WHICHROME_DEVICE_KEY")
+    if override:
+        return override
+    host = hostname()
     uid = machine_uuid()
     return f"{host}|{uid}" if uid else host
 
@@ -152,9 +165,9 @@ def device_key() -> str:
 def ensure_device(data: dict, label: str | None = None) -> str:
     key = device_key()
     dev = data["devices"].setdefault(key, {})
-    dev["hostname"] = socket.gethostname()
+    dev["hostname"] = hostname()
     dev["os"] = platform.system()
-    dev.setdefault("label", label or socket.gethostname())
+    dev.setdefault("label", label or hostname())
     if label:
         dev["label"] = label
     dev.setdefault("chromeProfiles", {})

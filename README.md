@@ -45,6 +45,12 @@ $ whichrome resolve cyborg
 1ec7d06e-6042-43e8-b2c4-611bd9ec5afe  cyborg - you@example.com - THIS computer
 ```
 
+<p align="center">
+  <img src="assets/demo.gif" alt="Terminal demo: the extension reports four opaque Browser 1-4 entries; whichrome roster names each one with its account and computer; resolve returns the right deviceId; and the loopback beacon proves a browser is really on this machine" width="880">
+</p>
+
+<p align="center"><sub>Real output. The registry it runs against holds example accounts on purpose.</sub></p>
+
 And when the agent has to ask, the question is actually answerable:
 
 <p align="center">
@@ -206,6 +212,9 @@ directory name and signed-in address from Chrome's `Local State`, and ignores th
 - **One profile can connect twice** with the same account, and only one holds your live session.
   Nickname them apart and mark the live one `--default`; the account fingerprint can't tell them
   apart.
+- **The beacon needs localhost permission in that browser.** Site permissions are per browser, so
+  `127.0.0.1` can be allowed in one Chrome and blocked in another. If `beacon check` reports zero
+  hits while `curl` to the same URL succeeds, that is a permission problem, not a remote browser.
 - **Tab ids belong to one browser.** After switching, re-read the tab context.
 
 ## Relationship to Claude Code itself
