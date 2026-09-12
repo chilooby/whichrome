@@ -78,9 +78,10 @@ deviceId.
 - it was verified recently, and
 - the user has not asked to be prompted every time.
 
-**4. Prove locality before you show the user anything.** The extension's `isLocal` flag has
-reported `true` for browsers on other machines, so do not trust it. Serve a nonce on loopback
-and see whether the browser reaches it. Only a Chrome on this computer can.
+**4. Prove locality before you show the user anything.** The `isLocal` flag has been observed
+reading `true` for a browser whose window was not on this machine. That is a first-hand report,
+not documented behaviour, so treat the flag as a hint and prove locality yourself: serve a nonce
+on loopback and see whether the browser reaches it. Only a Chrome on this computer can.
 
 Start it in the background. In bash:
 

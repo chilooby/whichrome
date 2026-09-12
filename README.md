@@ -119,8 +119,10 @@ on your desktop reads `REMOTE - not this computer` when you're on your laptop.
 
 ### Proves locality instead of trusting a flag
 
-The extension's `isLocal` has reported `true` for browsers on other machines. Whichrome serves a
-nonce on loopback and points the browser at it. Only a Chrome on this machine can reach it:
+In my own use, the extension's `isLocal` flag read `true` for a browser whose window was not on
+this machine. That is a first-hand observation, not documented Anthropic behaviour, and it is
+exactly why Whichrome proves locality instead of trusting a flag: it serves a nonce on loopback
+and points the browser at it. Only a Chrome on this machine can reach it.
 
 ```bash
 whichrome beacon start --port 8799 --nonce probe-1 &
@@ -205,6 +207,19 @@ directory name and signed-in address from Chrome's `Local State`, and ignores th
   Nickname them apart and mark the live one `--default`; the account fingerprint can't tell them
   apart.
 - **Tab ids belong to one browser.** After switching, re-read the tab context.
+
+## Relationship to Claude Code itself
+
+Someone filed [anthropics/claude-code#91620](https://github.com/anthropics/claude-code/issues/91620)
+in September 2026 describing this same problem: opaque `Browser 1/2/3` labels, a picker with no
+memory between sessions, and users hand-rolling deviceId notes in their `CLAUDE.md`. Whichrome is
+a stopgap you can use today.
+
+If Anthropic ships persistent browser naming, that removes the naming half of this and it should.
+Two things here would still be worth keeping: the **registry spanning several computers**, so a
+browser known on your desktop is flagged when you are on your laptop, and the **loopback beacon**,
+which proves a connection is physically on this machine rather than taking a flag's word for it.
+That issue is worth watching before you build anything on top of this.
 
 ## Requirements
 
